@@ -1,49 +1,11 @@
-from scipy.spatial import distance as dist
-from imutils.video import VideoStream
-import numpy as np
+# Python code for Multiple Color Detection 
+import numpy as np 
 import cv2
 import imutils
-import time
-import urllib.request
 
-#red 192.168.43.120
-
-redforward = 'http://192.168.43.85/car?a=2'
-redbackward = 'http://192.168.43.85/car?a=4'
-redstop = 'http://192.168.43.85/car?a=5'
-redright = 'http://192.168.43.85/car?a=1'
-redleft = 'http://192.168.43.85/car?a=3'
-redultrasonic = 'http://192.168.43.85/car?a=6'
-
-#yellow 192.168.43.132
-
-yellowforward = 'http://192.168.43.132/car?a=2'
-yellowbackward = 'http://192.168.43.132/car?a=4'
-yellowstop = 'http://192.168.43.132/car?a=5'
-yellowright = 'http://192.168.43.132/car?a=1'
-yellowleft = 'http://192.168.43.132/car?a=3'
-yellowultrasonic = 'http://192.168.43.132/car?a=6'
-
-#green 192.168.43.133
-
-greenforward = 'http://192.168.43.133/car?a=2'
-greenbackward = 'http://192.168.43.133/car?a=4'
-greenstop = 'http://192.168.43.133/car?a=5'
-greenright = 'http://192.168.43.133/car?a=1'
-greenleft = 'http://192.168.43.133/car?a=3'
-greenultrasonic = 'http://192.168.43.133/car?a=6'
-
-#blue 192.168.43.85
-blueforward = 'http://192.168.43.85/car?a=2'
-bluebackward = 'http://192.168.43.85/car?a=4'
-bluestop = 'http://192.168.43.85/car?a=5'
-blueright = 'http://192.168.43.85/car?a=1'
-blueleft = 'http://192.168.43.85/car?a=3'
-blueultrasonic = 'http://192.168.43.85/car?a=6'
-
-print("Requesting ipcam url")
-url='http://192.168.0.101:8080/shot.jpg'
-print("Request granted")
+# Capturing video through webcam 
+webcam = cv2.VideoCapture(1)
+print("starting camera")
 
 #defining object color
 #blue
@@ -67,79 +29,56 @@ Redpts = []
 Yellowpts = []
 Greenpts = []
 
-
-img1 = np.zeros((512,512,3),np.uint8)
-filename = 'map.jpg'
-
-print("Starting camera")
-vs= cv2.VideoCapture(0)
-
-#define the codec for saving video
-fourcc = cv2.VideoWriter_fourcc(*'X264')
-out = cv2.VideoWriter('output1.mp4',fourcc,20.0,(640,480))
-
-
-#time.sleep(2.0)
-
-while True:
-    
-    
-    imgResp=urllib.request.urlopen(url)
-    imgNp=np.array(bytearray(imgResp.read()),dtype=np.uint8)
-    frame=cv2.imdecode(imgNp,-1)
-    
-    #ret, frame =vs.read()
+  
+# Start a while loop 
+while(1): 
+      
+    # Reading the video from the 
+    # webcam in image frames 
+    ret, frame = webcam.read()
 
     # blurring to cancel the noice
     blurred = cv2.GaussianBlur(frame,(11,11),0)
-
-    # convert to hsv
-    hsv = cv2.cvtColor(blurred,cv2.COLOR_BGR2HSV)
+  
+    # Convert the imageFrame in  
+    # BGR(RGB color space) to  
+    # HSV(hue-saturation-value) 
+    # color space 
+    hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
     # show hsv frame
-    #cv2.imshow("hsv",hsv)
+    cv2.imshow("hsv",hsv)
 
-    urllib.request.urlopen(greenultrasonic)
-    urllib.request.urlopen(yellowultrasonic)
-    urllib.request.urlopen(redultrasonic)
-    urllib.request.urlopen(blueultrasonic)
-
+  
     #creating mask
     #blue
     Bluemask = cv2.inRange(hsv,BlueLower, BlueUpper)
     Bluemask = cv2.erode(Bluemask,None,iterations=2)
     Bluemask = cv2.dilate(Bluemask,None,iterations = 2)
+    cv2.imshow("Bluemask",Bluemask)
 
     #red
     Redmask = cv2.inRange(hsv,RedLower, RedUpper)
     Redmask = cv2.erode(Redmask,None,iterations=2)
     Redmask = cv2.dilate(Redmask,None,iterations = 2)
+    cv2.imshow("Redmask",Redmask)
+
 
     #Yellow
     Yellowmask = cv2.inRange(hsv,yellowLower, yellowUpper)
     Yellowmask = cv2.erode(Yellowmask,None,iterations=2)
     Yellowmask = cv2.dilate(Yellowmask,None,iterations = 2)
+    cv2.imshow("Yellowmask",Yellowmask)
+
 
     #green
     Greenmask = cv2.inRange(hsv,greenLower, greenUpper)
     Greenmask = cv2.erode(Greenmask,None,iterations=2)
     Greenmask = cv2.dilate(Greenmask,None,iterations = 2)
+    cv2.imshow("Greenmask",Greenmask)
 
-    '''
-    #finding contours
-    #Blue
-    Bluecnts, hierarchy = cv2.findContours(Bluemask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    #red
-    Redcnts, hierarchy = cv2.findContours(Redmask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    
-    #draw contours
-    #blue
-    cv2.drawContours(frame, Bluecnts,-1,(255,0,0),2)
-    #red
-    cv2.drawContours(frame, Redcnts,-1,(0,0,255),2)
-    '''
 
-    #Finding contours
+     #Finding contours
     #Blue
     Bluecnts = cv2.findContours(Bluemask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     Bluecnts = imutils.grab_contours(Bluecnts)
@@ -184,7 +123,6 @@ while True:
                 
                 cv2.line(frame,Bluepts[bi-1],Bluepts[bi],(255,0,0),1)
 
-    
     #red contours
     if len(Redcnts) > 0:
         
@@ -270,41 +208,12 @@ while True:
 
                 cv2.line(frame,Greenpts[gi-1],Greenpts[gi],(0,255,0),1)
 
-            
-    #eculidean distance between centre of blue and red
-    #D = dist.euclidean((cbx,cby), (crx, cry))
-
-    #if D<=100:
-    #cv2.line(frame,(cbx,cby),(crx,cry),(255,0,0),2)
-
-
-    out.write(frame)
-    cv2.imwrite(filename,frame)
-
-    cv2.imshow("Ipwebcam",frame)
+      
+              
+    # Program Termination 
+    cv2.imshow("Multiple Color Detection in Real-TIme", frame)
     
-    key = cv2.waitKey(1)
-    if key == 27:
+    if cv2.waitKey(10) & 0xFF == ord('q'): 
+        webcam.release() 
+        cv2.destroyAllWindows() 
         break
-    elif key == ord('q') or key == ord('Q'):
-        urllib.request.urlopen(redstop)
-        urllib.request.urlopen(greenstop)
-        urllib.request.urlopen(bluestop)
-        urllib.request.urlopen(yellowstop)
-        time.sleep(20)
-        
-
-urllib.request.urlopen(redstop)
-urllib.request.urlopen(greenstop)
-urllib.request.urlopen(bluestop)
-urllib.request.urlopen(yellowstop)
-vs.release()
-out.release()
-cv2.destroyAllWindows()
-
-
-
-
-            
-
-    
